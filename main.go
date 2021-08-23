@@ -62,6 +62,14 @@ func toReadableSize(nbytes int64) string {
 	return strconv.FormatInt(nbytes, 10) + " B"
 }
 
+func deleteFile(file_path string) error {
+	err := os.Remove(file_path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	var err error
 	dir := flag.String("path", "", "the path to traverse searching for duplicates")
@@ -84,6 +92,9 @@ func main() {
 	}
 
 	traverseDir(hashes, duplicates, &dupeSize, entries, *dir)
+	for dup := range duplicates {
+		deleteFile(dup)
+	}
 
 	fmt.Println("DUPLICATES")
 	for key, val := range duplicates {
