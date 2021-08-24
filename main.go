@@ -8,26 +8,36 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"sync/atomic"
 )
 
-func traverseDir(hashes, duplicates map[string]string, dupeSize *int64, entries []os.FileInfo, directory string) {
+func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
 	for _, entry := range entries {
+
+		files[entry.Name()] = toReadableSize(entry.Size())
+		err := Push(FileInfo{
+			name: entry.Name(),
+			last_access_time: entry.ModTime(),
+		})
+		if err != nil {
+			return
+		}
 		fullpath := (path.Join(directory, entry.Name()))
+
+		if val, ok := extensions[path.Ext(entry.Name())]; ok {
+			extensions[path.Ext(entry.Name())] = val+1
+		} else {
+			extensions[path.Ext(entry.Name())] = 1
+		}
 
 		if !entry.Mode().IsDir() && !entry.Mode().IsRegular() {
 			continue
 		}
 
 		if entry.IsDir() {
-			dirFiles, err := ioutil.ReadDir(fullpath)
-			if err != nil {
-				panic(err)
-			}
-			traverseDir(hashes, duplicates, dupeSize, dirFiles, fullpath)
 			continue
 		}
 		file, err := ioutil.ReadFile(fullpath)
+		//fmt.Println(string(file))
 		if err != nil {
 			panic(err)
 		}
@@ -39,7 +49,6 @@ func traverseDir(hashes, duplicates map[string]string, dupeSize *int64, entries 
 		hashString := fmt.Sprintf("%x", hashSum)
 		if hashEntry, ok := hashes[hashString]; ok {
 			duplicates[hashEntry] = fullpath
-			atomic.AddInt64(dupeSize, entry.Size())
 		} else {
 			hashes[hashString] = fullpath
 		}
@@ -70,39 +79,54 @@ func deleteFile(file_path string) error {
 	return nil
 }
 
+
+/**
+1. Takes as input a command-line argument --dir which is an absolute path to a directory in the host filesystem.
+2. Traverses over all the files in the given dir (excluding the hidden files and subdirectories).
+3. Generates a summary of the directory, the summary contains the following:
+    1. Name and size of all files in the directory.
+    2. Name and count of duplicate files (if any).
+    3. Count of files grouped by extension.
+    4. (Bonus) List of 10 least recently opened files.
+ */
 func main() {
 	var err error
-	dir := flag.String("path", "", "the path to traverse searching for duplicates")
+	dir := flag.String("dir", "", "the dir to summarize")
 	flag.Parse()
 
 	if *dir == "" {
-		*dir, err = os.Getwd()
-		if err != nil {
-			panic(err)
-		}
+		panic("please provide a dir to summarize")
 	}
 
+	files := map[string]string{}
 	hashes := map[string]string{}
 	duplicates := map[string]string{}
-	var dupeSize int64
+	extensions := map[string]int32{}
 
 	entries, err := ioutil.ReadDir(*dir)
 	if err != nil {
 		panic(err)
 	}
 
-	traverseDir(hashes, duplicates, &dupeSize, entries, *dir)
-	for dup := range duplicates {
-		deleteFile(dup)
+	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
+
+	fmt.Println("#File info")
+	for key, val := range files {
+		fmt.Printf("|name : %s |\t size : %s|\n",key,val)
 	}
 
-	fmt.Println("DUPLICATES")
-	for key, val := range duplicates {
-		fmt.Printf("key: %s, val: %s\n", key, val)
+	fmt.Println("#Total duplicate files")
+	fmt.Println(len(duplicates))
+
+	fmt.Println("#Duplicate files")
+	for _, val := range duplicates {
+		fmt.Printf("%s\n",val)
 	}
-	fmt.Println("TOTAL FILES:", len(hashes))
-	fmt.Println("DUPLICATES:", len(duplicates))
-	fmt.Println("TOTAL DUPLICATE SIZE:", toReadableSize(dupeSize))
+
+	fmt.Println("#Group by extensions")
+	for key, val := range extensions {
+		fmt.Printf("%s : %d\n",key, val)
+	}
+
 }
 
-// running into problems of not being able to open directories inside .app folders
