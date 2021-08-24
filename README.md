@@ -16,7 +16,6 @@ Also you were able dig out the requirement document for this code and it looks l
     1. Name and size of all files in the directory.
     2. Name and count of duplicate files (if any).
     3. Count of files grouped by extension.
-    4. (Bonus) List of 10 least recently opened files.
 ```
 
 
