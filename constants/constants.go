@@ -1,4 +1,4 @@
-package main
+package constants
 const (
 
 	TB=1000*1000*1000*1000

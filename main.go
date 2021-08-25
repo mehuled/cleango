@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/razorpay/clean-go/dirInformation"
+	"github.com/razorpay/clean-go/services"
 	"io/ioutil"
 )
 
@@ -23,20 +25,24 @@ func main() {
 	if *dir == "" {
 		panic("please provide a dir to summarize")
 	}
+     dirInfo := dirInformation.DirInformation{}
+     dirInfo.InitializeDirInformation()
 
-	files := map[string]string{}
+	/*files := map[string]string{}
 	hashes := map[string]string{}
 	duplicates := map[string]string{}
-	extensions := map[string]int32{}
+	extensions := map[string]int32{}*/
 
 	entries, err := ioutil.ReadDir(*dir)
 	if err != nil {
 		panic(err)
 	}
 
-	traverseDirectory(hashes, files, duplicates, entries, *dir, extensions)
+	services.TraverseDirectory(dirInfo.Hashes, dirInfo.Files, dirInfo.Duplicates, entries, *dir, dirInfo.Extensions)
 
-	displayFileinformation(extensions,files,duplicates)
+	services.DisplayFileinformation(dirInfo.Extensions,dirInfo.Files,dirInfo.Duplicates)
+
+	//leastRecentlyopened(files)
 
 
 }

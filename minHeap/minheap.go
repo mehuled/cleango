@@ -1,4 +1,4 @@
-package main
+package minHeap
 
 import "time"
 
@@ -10,7 +10,7 @@ func Push(info FileInfoaccess) error {
 	return nil
 }
 
-func Pop() (FileInfoaccess ,error) {
+func Pop() (FileInfoaccess,error) {
 	return FileInfoaccess{Name : "hello"}, nil
 
 }
