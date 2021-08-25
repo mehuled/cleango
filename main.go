@@ -21,7 +21,7 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		if err != nil {
 			return
 		}
-		fullpath := (path.Join(directory, entry.Name()))
+		fullPath := path.Join(directory, entry.Name())
 
 		if val, ok := extensions[path.Ext(entry.Name())]; ok {
 			extensions[path.Ext(entry.Name())] = val+1
@@ -36,7 +36,7 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		if entry.IsDir() {
 			continue
 		}
-		file, err := ioutil.ReadFile(fullpath)
+		file, err := ioutil.ReadFile(fullPath)
 		//fmt.Println(string(file))
 		if err != nil {
 			panic(err)
@@ -48,27 +48,29 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		hashSum := hash.Sum(nil)
 		hashString := fmt.Sprintf("%x", hashSum)
 		if hashEntry, ok := hashes[hashString]; ok {
-			duplicates[hashEntry] = fullpath
+			duplicates[hashEntry] = fullPath
 		} else {
-			hashes[hashString] = fullpath
+			hashes[hashString] = fullPath
 		}
 	}
 }
 
-func toReadableSize(nbytes int64) string {
-	if nbytes > 1000*1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000*1000), 10) + " TB"
+func toReadableSize(numOfBytes int64) string {
+
+
+	if numOfBytes > 1000*1000*1000*1000 {
+		return strconv.FormatInt(numOfBytes/(1000*1000*1000*1000), 10) + " TB"
 	}
-	if nbytes > 1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000), 10) + " GB"
+	if numOfBytes > 1000*1000*1000 {
+		return strconv.FormatInt(numOfBytes/(1000*1000*1000), 10) + " GB"
 	}
-	if nbytes > 1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000), 10) + " MB"
+	if numOfBytes > 1000*1000 {
+		return strconv.FormatInt(numOfBytes/(1000*1000), 10) + " MB"
 	}
-	if nbytes > 1000 {
-		return strconv.FormatInt(nbytes/1000, 10) + " KB"
+	if numOfBytes > 1000 {
+		return strconv.FormatInt(numOfBytes/1000, 10) + " KB"
 	}
-	return strconv.FormatInt(nbytes, 10) + " B"
+	return strconv.FormatInt(numOfBytes, 10) + " B"
 }
 
 func deleteFile(file_path string) error {
@@ -91,7 +93,7 @@ func deleteFile(file_path string) error {
  */
 func main() {
 	var err error
-	dir := flag.String("dir", "", "the dir to summarize")
+	dir := flag.String("dir", "", "the directory to summarize")
 	flag.Parse()
 
 	if *dir == "" {
@@ -111,8 +113,8 @@ func main() {
 	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
 
 	fmt.Println("#File info")
-	for key, val := range files {
-		fmt.Printf("|name : %s |\t size : %s|\n",key,val)
+	for fileName, fileSize := range files {
+		fmt.Printf("|name : %s |\t size : %s|\n", fileName, fileSize)
 	}
 
 	fmt.Println("#Total duplicate files")
