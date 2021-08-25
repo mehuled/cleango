@@ -9,19 +9,12 @@ import (
 	"path"
 	"strconv"
 )
-
+// traversing the directory
 func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
 	for _, entry := range entries {
 
 		files[entry.Name()] = toReadableSize(entry.Size())
-	//	err := Push(FileInfo{
-	//		name: entry.Name(),
-	//		last_access_time: entry.ModTime(),
-	//	})
-	//	if err != nil {
-	//		return
-	//
-	//	}
+
 		fullpath := (path.Join(directory, entry.Name()))
 
 		if val, ok := extensions[path.Ext(entry.Name())]; ok {
@@ -55,7 +48,7 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		}
 	}
 }
-
+// calculating the file size
 func toReadableSize(nbytes int64) string {
 	if nbytes > 1024*1024*1024*1024 {
 		return strconv.FormatInt(nbytes/(1000*1000*1000*1000), 10) + " TB"
