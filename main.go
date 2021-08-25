@@ -14,13 +14,14 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 	for _, entry := range entries {
 
 		files[entry.Name()] = toReadableSize(entry.Size())
-		err := Push(FileInfo{
-			name: entry.Name(),
-			last_access_time: entry.ModTime(),
-		})
-		if err != nil {
-			return
-		}
+	//	err := Push(FileInfo{
+	//		name: entry.Name(),
+	//		last_access_time: entry.ModTime(),
+	//	})
+	//	if err != nil {
+	//		return
+	//
+	//	}
 		fullpath := (path.Join(directory, entry.Name()))
 
 		if val, ok := extensions[path.Ext(entry.Name())]; ok {
@@ -56,16 +57,16 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 }
 
 func toReadableSize(nbytes int64) string {
-	if nbytes > 1000*1000*1000*1000 {
+	if nbytes > 1024*1024*1024*1024 {
 		return strconv.FormatInt(nbytes/(1000*1000*1000*1000), 10) + " TB"
 	}
-	if nbytes > 1000*1000*1000 {
+	if nbytes > 1024*1024*1024 {
 		return strconv.FormatInt(nbytes/(1000*1000*1000), 10) + " GB"
 	}
-	if nbytes > 1000*1000 {
+	if nbytes > 1024*1024 {
 		return strconv.FormatInt(nbytes/(1000*1000), 10) + " MB"
 	}
-	if nbytes > 1000 {
+	if nbytes > 1024 {
 		return strconv.FormatInt(nbytes/1000, 10) + " KB"
 	}
 	return strconv.FormatInt(nbytes, 10) + " B"
@@ -78,7 +79,6 @@ func deleteFile(file_path string) error {
 	}
 	return nil
 }
-
 
 /**
 1. Takes as input a command-line argument --dir which is an absolute path to a directory in the host filesystem.
