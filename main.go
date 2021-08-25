@@ -1,83 +1,16 @@
 package main
 
 import (
-	"crypto/sha1"
+
 	"flag"
 	"fmt"
+	"github.com/razorpay/clean-go/Services"
 	"io/ioutil"
-	"os"
-	"path"
-	"strconv"
+
+
 )
 
-func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
-	for _, entry := range entries {
 
-		files[entry.Name()] = toReadableSize(entry.Size())
-		err := Push(FileInfo{
-			name: entry.Name(),
-			last_access_time: entry.ModTime(),
-		})
-		if err != nil {
-			return
-		}
-		fullpath := (path.Join(directory, entry.Name()))
-
-		if val, ok := extensions[path.Ext(entry.Name())]; ok {
-			extensions[path.Ext(entry.Name())] = val+1
-		} else {
-			extensions[path.Ext(entry.Name())] = 1
-		}
-
-		if !entry.Mode().IsDir() && !entry.Mode().IsRegular() {
-			continue
-		}
-
-		if entry.IsDir() {
-			continue
-		}
-		file, err := ioutil.ReadFile(fullpath)
-		//fmt.Println(string(file))
-		if err != nil {
-			panic(err)
-		}
-		hash := sha1.New()
-		if _, err := hash.Write(file); err != nil {
-			panic(err)
-		}
-		hashSum := hash.Sum(nil)
-		hashString := fmt.Sprintf("%x", hashSum)
-		if hashEntry, ok := hashes[hashString]; ok {
-			duplicates[hashEntry] = fullpath
-		} else {
-			hashes[hashString] = fullpath
-		}
-	}
-}
-
-func toReadableSize(nbytes int64) string {
-	if nbytes > 1000*1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000*1000), 10) + " TB"
-	}
-	if nbytes > 1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000), 10) + " GB"
-	}
-	if nbytes > 1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000), 10) + " MB"
-	}
-	if nbytes > 1000 {
-		return strconv.FormatInt(nbytes/1000, 10) + " KB"
-	}
-	return strconv.FormatInt(nbytes, 10) + " B"
-}
-
-func deleteFile(file_path string) error {
-	err := os.Remove(file_path)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 
 /**
@@ -91,6 +24,7 @@ func deleteFile(file_path string) error {
  */
 func main() {
 	var err error
+	//taking the dir
 	dir := flag.String("dir", "", "the dir to summarize")
 	flag.Parse()
 
@@ -108,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
+	Services.TraverseDir(hashes, files, duplicates, entries, *dir, extensions)
 
 	fmt.Println("#File info")
 	for key, val := range files {

@@ -1,4 +1,4 @@
-package main
+package Services
 
 import "time"
 
@@ -7,6 +7,7 @@ type FileInfo struct {
 	last_access_time time.Time
 }
 func Push(info FileInfo) error {
+
 	return nil
 }
 
