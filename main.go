@@ -10,6 +10,27 @@ import (
 	"strconv"
 )
 
+func getExtensionsforFile(extensions map[string]int32,entry os.FileInfo){
+	if val, ok := extensions[path.Ext(entry.Name())]; ok {
+		extensions[path.Ext(entry.Name())] = val+1
+	} else {
+		extensions[path.Ext(entry.Name())] = 1
+	}
+
+}
+func getDuplicatesforFile(file []byte, fullpath string, hashes, duplicates map[string]string){
+	hash := sha1.New()
+	if _, err := hash.Write(file); err != nil {
+		panic(err)
+	}
+	hashSum := hash.Sum(nil)
+	hashString := fmt.Sprintf("%x", hashSum)
+	if hashEntry, ok := hashes[hashString]; ok {
+		duplicates[hashEntry] = fullpath
+	} else {
+		hashes[hashString] = fullpath
+	}
+}
 func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
 	for _, entry := range entries {
 
@@ -21,13 +42,10 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		if err != nil {
 			return
 		}
-		fullpath := (path.Join(directory, entry.Name()))
+		fullpath := path.Join(directory, entry.Name())
 
-		if val, ok := extensions[path.Ext(entry.Name())]; ok {
-			extensions[path.Ext(entry.Name())] = val+1
-		} else {
-			extensions[path.Ext(entry.Name())] = 1
-		}
+        //get the extensions for a particular entry
+        getExtensionsforFile(extensions,entry)
 
 		if !entry.Mode().IsDir() && !entry.Mode().IsRegular() {
 			continue
@@ -37,21 +55,13 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 			continue
 		}
 		file, err := ioutil.ReadFile(fullpath)
-		//fmt.Println(string(file))
+
 		if err != nil {
 			panic(err)
 		}
-		hash := sha1.New()
-		if _, err := hash.Write(file); err != nil {
-			panic(err)
-		}
-		hashSum := hash.Sum(nil)
-		hashString := fmt.Sprintf("%x", hashSum)
-		if hashEntry, ok := hashes[hashString]; ok {
-			duplicates[hashEntry] = fullpath
-		} else {
-			hashes[hashString] = fullpath
-		}
+		//get the duplicates for a particular file
+		getDuplicatesforFile(file,fullpath,hashes,duplicates)
+
 	}
 }
 
@@ -79,7 +89,26 @@ func deleteFile(file_path string) error {
 	return nil
 }
 
+func displayFileinformation(extensions map[string]int32,files,duplicates map[string]string){
+	fmt.Println("#File info")
+	for key, val := range files {
+		fmt.Printf("|name : %s |\t size : %s|\n",key,val)
+	}
 
+	fmt.Println("#Total duplicate files")
+	fmt.Println(len(duplicates))
+
+	fmt.Println("#Duplicate files")
+	for _, val := range duplicates {
+		fmt.Printf("%s\n",val)
+	}
+
+	fmt.Println("#Group by extensions")
+	for key, val := range extensions {
+		fmt.Printf("%s : %d\n",key, val)
+	}
+
+}
 /**
 1. Takes as input a command-line argument --dir which is an absolute path to a directory in the host filesystem.
 2. Traverses over all the files in the given dir (excluding the hidden files and subdirectories).
@@ -110,23 +139,8 @@ func main() {
 
 	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
 
-	fmt.Println("#File info")
-	for key, val := range files {
-		fmt.Printf("|name : %s |\t size : %s|\n",key,val)
-	}
+	displayFileinformation(extensions,files,duplicates)
 
-	fmt.Println("#Total duplicate files")
-	fmt.Println(len(duplicates))
 
-	fmt.Println("#Duplicate files")
-	for _, val := range duplicates {
-		fmt.Printf("%s\n",val)
-	}
-
-	fmt.Println("#Group by extensions")
-	for key, val := range extensions {
-		fmt.Printf("%s : %d\n",key, val)
-	}
-   //trying something
 }
 
