@@ -2,15 +2,15 @@ package main
 
 import "time"
 
-type FileInfo struct {
+type FileInfoaccess struct {
 	name string
 	last_access_time time.Time
 }
-func Push(info FileInfo) error {
+func Push(info FileInfoaccess) error {
 	return nil
 }
 
-func Pop() (FileInfo ,error) {
-	return FileInfo{name : "hello"}, nil
+func Pop() (FileInfoaccess ,error) {
+	return FileInfoaccess{name : "hello"}, nil
 
 }

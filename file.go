@@ -1,7 +1,7 @@
 package main
 
 
-type FileInfo2 struct {
+type FileInformation struct {
 	name string
 	content []byte
 	hash string
@@ -10,14 +10,14 @@ type FileInfo2 struct {
 	extension string
 }
 
-func getName(f FileInfo2) string {
+func getName(f FileInformation) string {
 	return f.name
 }
 
-func getContent(f FileInfo2) []byte {
+func getContent(f FileInformation) []byte {
 	return f.content
 }
 
-func getExtension(f FileInfo2) string {
+func getExtension(f FileInformation) string {
 	return f.extension
 }
