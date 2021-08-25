@@ -10,7 +10,12 @@ import (
 	"strconv"
 )
 
-func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
+func traverseDir(  entries []os.FileInfo, directory string) {
+	files := map[string]string{}
+	hashes := map[string]string{}
+	duplicates := map[string]string{}
+	extensions := map[string]int32{}
+
 	for _, entry := range entries {
 
 		files[entry.Name()] = toReadableSize(entry.Size())
@@ -53,22 +58,23 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 			hashes[hashString] = fullPath
 		}
 	}
+	printSummary(files,duplicates,extensions)
 }
 
 func toReadableSize(numOfBytes int64) string {
 
-
-	if numOfBytes > 1000*1000*1000*1000 {
-		return strconv.FormatInt(numOfBytes/(1000*1000*1000*1000), 10) + " TB"
+	const thousand = 1000
+	if numOfBytes > thousand*thousand*thousand*thousand {
+		return strconv.FormatInt(numOfBytes/(thousand*thousand*thousand*thousand), 10) + " TB"
 	}
-	if numOfBytes > 1000*1000*1000 {
-		return strconv.FormatInt(numOfBytes/(1000*1000*1000), 10) + " GB"
+	if numOfBytes > thousand*thousand*thousand {
+		return strconv.FormatInt(numOfBytes/(thousand*thousand*thousand), 10) + " GB"
 	}
-	if numOfBytes > 1000*1000 {
-		return strconv.FormatInt(numOfBytes/(1000*1000), 10) + " MB"
+	if numOfBytes > thousand*thousand {
+		return strconv.FormatInt(numOfBytes/(thousand*thousand), 10) + " MB"
 	}
-	if numOfBytes > 1000 {
-		return strconv.FormatInt(numOfBytes/1000, 10) + " KB"
+	if numOfBytes > thousand {
+		return strconv.FormatInt(numOfBytes/thousand, 10) + " KB"
 	}
 	return strconv.FormatInt(numOfBytes, 10) + " B"
 }
@@ -122,20 +128,11 @@ func main() {
 		panic("please provide a dir to summarize")
 	}
 
-	files := map[string]string{}
-	hashes := map[string]string{}
-	duplicates := map[string]string{}
-	extensions := map[string]int32{}
-
 	entries, err := ioutil.ReadDir(*dir)
 	if err != nil {
 		panic(err)
 	}
 
-	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
-
-	printSummary(files,duplicates,extensions);
-
-
+	traverseDir(entries, *dir)
 }
 
