@@ -4,7 +4,7 @@ import "time"
 
 type FileInfo struct {
 	name string
-	last_access_time time.Time
+	lastAccessTime time.Time
 }
 func Push(info FileInfo) error {
 	return nil
@@ -12,5 +12,4 @@ func Push(info FileInfo) error {
 
 func Pop() (FileInfo ,error) {
 	return FileInfo{name : "hello"}, nil
-
 }

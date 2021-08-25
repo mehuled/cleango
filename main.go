@@ -5,23 +5,25 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path"
 	"strconv"
 )
 
+const Size = 1000
+const Base = 10
+
 func traverseDir(hashes, files map[string]string, duplicates map[string]string,  entries []os.FileInfo, directory string, extensions map[string]int32) {
 	for _, entry := range entries {
 
 		files[entry.Name()] = toReadableSize(entry.Size())
-		err := Push(FileInfo{
-			name: entry.Name(),
-			last_access_time: entry.ModTime(),
-		})
-		if err != nil {
-			return
-		}
-		fullpath := (path.Join(directory, entry.Name()))
+		fileInfo :=  FileInfo{}
+
+		fileInfo.name = entry.Name()
+		fileInfo.lastAccessTime = entry.ModTime()
+
+		fullPath := path.Join(directory, entry.Name())
 
 		if val, ok := extensions[path.Ext(entry.Name())]; ok {
 			extensions[path.Ext(entry.Name())] = val+1
@@ -36,49 +38,40 @@ func traverseDir(hashes, files map[string]string, duplicates map[string]string, 
 		if entry.IsDir() {
 			continue
 		}
-		file, err := ioutil.ReadFile(fullpath)
-		//fmt.Println(string(file))
-		if err != nil {
-			panic(err)
+		file, err2 := ioutil.ReadFile(fullPath)
+
+		if err2 != nil {
+			panic(err2)
 		}
 		hash := sha1.New()
-		if _, err := hash.Write(file); err != nil {
-			panic(err)
+		if _, err3 := hash.Write(file); err3 != nil {
+			panic(err3)
 		}
 		hashSum := hash.Sum(nil)
 		hashString := fmt.Sprintf("%x", hashSum)
 		if hashEntry, ok := hashes[hashString]; ok {
-			duplicates[hashEntry] = fullpath
+			duplicates[hashEntry] = fullPath
 		} else {
-			hashes[hashString] = fullpath
+			hashes[hashString] = fullPath
 		}
 	}
 }
 
-func toReadableSize(nbytes int64) string {
-	if nbytes > 1000*1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000*1000), 10) + " TB"
+func toReadableSize(numberOfBytes int64) string {
+	if numberOfBytes > int64(math.Pow(Size,4)) {
+		return strconv.FormatInt(numberOfBytes/int64(math.Pow(Size,4)), Base) + " TB"
 	}
-	if nbytes > 1000*1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000*1000), 10) + " GB"
+	if numberOfBytes > int64(math.Pow(Size,3)) {
+		return strconv.FormatInt(numberOfBytes/int64(math.Pow(Size,3)), Base) + " GB"
 	}
-	if nbytes > 1000*1000 {
-		return strconv.FormatInt(nbytes/(1000*1000), 10) + " MB"
+	if numberOfBytes > int64(math.Pow(Size,2)) {
+		return strconv.FormatInt(numberOfBytes/int64(math.Pow(Size,2)), Base) + " MB"
 	}
-	if nbytes > 1000 {
-		return strconv.FormatInt(nbytes/1000, 10) + " KB"
+	if numberOfBytes > Size {
+		return strconv.FormatInt(numberOfBytes/Size, Base) + " KB"
 	}
-	return strconv.FormatInt(nbytes, 10) + " B"
+	return strconv.FormatInt(numberOfBytes, Base) + " B"
 }
-
-func deleteFile(file_path string) error {
-	err := os.Remove(file_path)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 
 /**
 1. Takes as input a command-line argument --dir which is an absolute path to a directory in the host filesystem.
@@ -88,7 +81,7 @@ func deleteFile(file_path string) error {
     2. Name and count of duplicate files (if any).
     3. Count of files grouped by extension.
     4. (Bonus) List of 10 least recently opened files.
- */
+*/
 func main() {
 	var err error
 	dir := flag.String("dir", "", "the dir to summarize")
@@ -111,8 +104,8 @@ func main() {
 	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
 
 	fmt.Println("#File info")
-	for key, val := range files {
-		fmt.Printf("|name : %s |\t size : %s|\n",key,val)
+	for fileName, fileSize := range files {
+		fmt.Printf("|name : %s |\t size : %s|\n", fileName, fileSize)
 	}
 
 	fmt.Println("#Total duplicate files")
@@ -129,4 +122,3 @@ func main() {
 	}
 
 }
-
