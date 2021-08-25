@@ -91,6 +91,28 @@ func deleteFile(file_path string) error {
     3. Count of files grouped by extension.
     4. (Bonus) List of 10 least recently opened files.
  */
+
+func printSummary(files map[string]string , duplicates map[string]string , extensions map[string]int32){
+	fmt.Println("#File info")
+	for fileName, fileSize := range files {
+		fmt.Printf("|name : %s |\t size : %s|\n", fileName, fileSize)
+	}
+
+	fmt.Println("#Total duplicate files")
+	fmt.Println(len(duplicates))
+
+	fmt.Println("#Duplicate files")
+	for _, val := range duplicates {
+		fmt.Printf("%s\n",val)
+	}
+
+	fmt.Println("#Group by extensions")
+	for key, val := range extensions {
+		fmt.Printf("%s : %d\n",key, val)
+	}
+
+
+}
 func main() {
 	var err error
 	dir := flag.String("dir", "", "the directory to summarize")
@@ -112,23 +134,8 @@ func main() {
 
 	traverseDir(hashes, files, duplicates, entries, *dir, extensions)
 
-	fmt.Println("#File info")
-	for fileName, fileSize := range files {
-		fmt.Printf("|name : %s |\t size : %s|\n", fileName, fileSize)
-	}
+	printSummary(files,duplicates,extensions);
 
-	fmt.Println("#Total duplicate files")
-	fmt.Println(len(duplicates))
-
-	fmt.Println("#Duplicate files")
-	for _, val := range duplicates {
-		fmt.Printf("%s\n",val)
-	}
-
-	fmt.Println("#Group by extensions")
-	for key, val := range extensions {
-		fmt.Printf("%s : %d\n",key, val)
-	}
 
 }
 
